@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TalentRadar — Демо (оффлайн)</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --gray: #e2e8f0;
+        }
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            color: #334155;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            max-width: 1000px;
+            width: 100%;
+            background: white;
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        .container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+        }
+        h1 {
+            color: var(--primary);
+            text-align: center;
+            font-size: 2.4rem;
+            margin: 0 0 10px;
+            font-weight: 800;
+        }
+        .subtitle {
+            text-align: center;
+            color: #64748b;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 30px;
+            background: #f1f5f9;
+            padding: 8px;
+            border-radius: 16px;
+            justify-content: center;
+        }
+        .tab {
+            padding: 12px 24px;
+            border-radius: 12px;
+            background: transparent;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #64748b;
+        }
+        .tab.active {
+            background: white;
+            color: var(--primary);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        /* Search & Bulk */
+        .search-section, .bulk-section {
+            margin-bottom: 40px;
+            transition: opacity 0.3s;
+        }
+        .search-box {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        input, textarea {
+            padding: 16px 20px;
+            font-size: 16px;
+            border: 2px solid var(--gray);
+            border-radius: 14px;
+            outline: none;
+            transition: border 0.3s;
+        }
+        input:focus, textarea:focus {
+            border-color: var(--primary);
+        }
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+            font-family: inherit;
+        }
+        button {
+            padding: 16px 28px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+        button:hover {
+            background: #1d4ed8;
+            transform: translateY(-2px);
+        }
+        button.secondary {
+            background: var(--gray);
+            color: #475569;
+        }
+        button.secondary:hover {
+            background: #cbd5e1;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            margin: 50px 0;
+            display: none;
+        }
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Result */
+        .result {
+            display: none;
+            animation: fadeInUp 0.7s ease-out;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 25px;
+            padding-bottom: 25px;
+            border-bottom: 2px solid var(--gray);
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .name {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .meta {
+            font-size: 15px;
+            color: #64748b;
+            line-height: 1.5;
+        }
+        .score-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .score {
+            font-size: 72px;
+            font-weight: 900;
+            color: var(--success);
+            line-height: 1;
+            margin: 0;
+            font-variant-numeric: tabular-nums;
+        }
+        .score-sub {
+            font-size: 18px;
+            color: #64748b;
+            margin-top: 5px;
+        }
+        .tag {
+            background: var(--success);
+            color: white;
+            padding: 10px 24px;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: 700;
+            display: inline-block;
+            margin-top: 15px;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        /* Bars */
+        .bars {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
+            margin: 40px 0;
+        }
+        .bar-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .bar-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-weight: 700;
+            font-size: 16px;
+            color: var(--dark);
+        }
+        .bar {
+            height: 20px;
+            background: #f1f5f9;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+        .bar-fill {
+            height: 100%;
+            background: var(--primary);
+            border-radius: 10px;
+            width: 0%;
+            transition: width 1.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        /* Recommendation */
+        .recommendation {
+            background: #ecfdf5;
+            padding: 30px;
+            border-radius: 18px;
+            border-left: 6px solid var(--success);
+            margin: 40px 0;
+            font-size: 17px;
+            line-height: 1.7;
+            position: relative;
+        }
+        .recommendation strong {
+            color: var(--dark);
+            font-size: 18px;
+        }
+        .recommendation:before {
+            content: "💡";
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 24px;
+        }
+        .recommendation > div {
+            padding-left: 50px;
+        }
+
+        /* Self-diagnosis mode */
+        .self-diagnosis {
+            background: #fef3c7;
+            border-left: 6px solid var(--warning);
+            margin: 40px 0;
+            padding: 30px;
+            border-radius: 18px;
+            font-size: 17px;
+            line-height: 1.7;
+        }
+        .self-diagnosis strong {
+            color: var(--dark);
+        }
+        .gap-list {
+            margin: 15px 0 0;
+            padding-left: 20px;
+        }
+        .gap-item {
+            margin: 8px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+        .gap-item:before {
+            content: "⚠️";
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        /* Buttons */
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-top: 30px;
+            justify-content: center;
+        }
+        .btn-wide {
+            flex: 1;
+            min-width: 200px;
+            text-align: center;
+        }
+
+        /* Details */
+        .details {
+            margin-top: 40px;
+            background: #f8fafc;
+            padding: 30px;
+            border-radius: 18px;
+            border: 1px solid var(--gray);
+        }
+        .details h3 {
+            color: var(--dark);
+            margin: 0 0 20px 0;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--gray);
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .details h3:before {
+            content: "📄";
+            font-size: 22px;
+        }
+        .details ul {
+            padding-left: 24px;
+            margin: 15px 0;
+            line-height: 1.8;
+        }
+        .details li {
+            margin: 8px 0;
+        }
+        .details p {
+            margin: 12px 0;
+            line-height: 1.8;
+        }
+
+        /* Bulk Results */
+        .bulk-results {
+            display: none;
+            margin-top: 40px;
+        }
+        .bulk-list {
+            display: grid;
+            gap: 16px;
+            margin-top: 20px;
+        }
+        .bulk-item {
+            padding: 20px;
+            background: white;
+            border: 2px solid var(--gray);
+            border-radius: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .bulk-item:hover {
+            border-color: var(--primary);
+            transform: translateX(5px);
+        }
+        .bulk-name {
+            font-weight: 600;
+            font-size: 18px;
+        }
+        .bulk-score {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--success);
+        }
+        .bulk-tag {
+            font-size: 14px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            background: var(--success);
+            color: white;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            color: #94a3b8;
+            font-size: 14px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 25px;
+                margin: 10px;
+            }
+            h1 {
+                font-size: 2rem;
+            }
+            .search-box {
+                flex-direction: column;
+            }
+            .tabs {
+                flex-wrap: wrap;
+            }
+            .score {
+                font-size: 56px;
+            }
+            .btn-group {
+                flex-direction: column;
+            }
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🚀 TalentRadar</h1>
+    <div class="subtitle">ИИ-ассистент для выявления научных талантов и самодиагностики</div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+        <button class="tab active" onclick="switchTab('single')">Один кандидат</button>
+        <button class="tab" onclick="switchTab('bulk')">Список кандидатов</button>
+        <button class="tab" onclick="switchTab('self')">Самодиагностика</button>
+    </div>
+
+    <!-- Single Candidate Mode -->
+    <div id="single-mode" class="search-section">
+        <div class="search-box">
+            <input type="text" id="scientistName" placeholder="Введите фамилию (например: Petrova)" value="Petrova">
+            <button onclick="analyzeSingle()">🔍 Анализировать</button>
+        </div>
+    </div>
+
+    <!-- Bulk Mode -->
+    <div id="bulk-mode" class="bulk-section" style="display: none;">
+        <textarea id="scientistList" placeholder="Введите список фамилий, по одной на строку&#10;&#10;Пример:&#10;Petrova&#10;Ivanov&#10;Smith&#10;Wang"></textarea>
+        <div style="margin-top: 20px; text-align: center;">
+            <button onclick="analyzeBulk()">📊 Проанализировать список</button>
+        </div>
+    </div>
+
+    <!-- Self-Diagnosis Mode -->
+    <div id="self-mode" class="search-section" style="display: none;">
+        <div style="text-align: center; margin-bottom: 30px;">
+            <h3 style="color: var(--dark); margin: 0;">Проверьте свой профиль как начинающий ученый</h3>
+            <p style="color: #64748b;">Система покажет, чего вам не хватает до "звездного" уровня</p>
+        </div>
+        <div style="text-align: center;">
+            <button onclick="runSelfDiagnosis()">🪄 Запустить самодиагностику</button>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <div>Анализируем публикации, цитирования, соавторов...</div>
+        <div style="margin-top: 10px; font-size: 14px; color: #64748b;">~ 3 секунды</div>
+    </div>
+
+    <!-- Single Result -->
+    <div class="result" id="single-result">
+        <div class="header">
+            <div>
+                <div class="name" id="result-name">👩‍🔬 Анастасия Петрова</div>
+                <div class="meta" id="result-meta1">📍 Computer Science, MIT | 📚 3 публикации | h-index: 4 | 📈 Цитирования: 80</div>
+            </div>
+            <div class="meta" id="result-meta2">✅ На arXiv: да | 🌍 Образование: MIT | 🎓 Научная школа: Stanford AI Lab</div>
+        </div>
+
+        <div class="score-container">
+            <div class="score" id="result-score">92</div>
+            <div class="score-sub">из 100</div>
+            <div class="tag" id="result-tag">Высокий потенциал — приоритетный кандидат</div>
+        </div>
+
+        <div class="bars">
+            <div class="bar-item">
+                <div class="bar-label">
+                    <span>📊 Качество публикаций</span>
+                    <span id="pub-percent">95%</span>
+                </div>
+                <div class="bar"><div class="bar-fill" id="pub-bar" data-width="95%"></div></div>
+            </div>
+            <div class="bar-item">
+                <div class="bar-label">
+                    <span>👥 Вклад и научная среда</span>
+                    <span id="collab-percent">90%</span>
+                </div>
+                <div class="bar"><div class="bar-fill" id="collab-bar" data-width="90%"></div></div>
+            </div>
+            <div class="bar-item">
+                <div class="bar-label">
+                    <span>🌐 Международность</span>
+                    <span id="global-percent">85%</span>
+                </div>
+                <div class="bar"><div class="bar-fill" id="global-bar" data-width="85%"></div></div>
+            </div>
+            <div class="bar-item">
+                <div class="bar-label">
+                    <span>🧪 Глубина исследования</span>
+                    <span id="depth-percent">98%</span>
+                </div>
+                <div class="bar"><div class="bar-fill" id="depth-bar" data-width="98%"></div></div>
+            </div>
+        </div>
+
+        <div class="recommendation">
+            <div>
+                <strong>🎯 Рекомендация для HR/Фондов:</strong><br>
+                Приоритетный кандидат на грант или приглашение в исследовательскую лабораторию. Рекомендуем поддержать участие в NeurIPS 2025 и рассмотреть на позицию Assistant Professor. Высокая вероятность прорывных публикаций в течение 2 лет.
+            </div>
+        </div>
+
+        <div class="btn-group">
+            <button class="btn-wide" onclick="downloadPDF()">📥 Скачать полный отчет (PDF)</button>
+            <button class="btn-wide secondary" onclick="addToWatchlist()">⭐ Добавить в избранное</button>
+        </div>
+
+        <div class="details">
+            <h3>📄 Детальный анализ публикаций</h3>
+            <ul id="pub-details">
+                <li><strong>NeurIPS 2023</strong> — Q1, первая авторка, 45 цитирований, 12 формул, 110 ссылок, грамматика: экспертный уровень</li>
+                <li><strong>CVPR 2024</strong> — Q1, первая авторка, 30 цитирований, 8 экспериментов, индекс новизны: высокий</li>
+                <li><strong>arXiv:2403.12345</strong> — препринт, 5 формул, 130 ссылок, рецензенты: профессора MIT и Oxford</li>
+            </ul>
+
+            <h3>📈 Динамика роста</h3>
+            <p id="growth">h-index: 1 → 4 за 18 месяцев | Цитирования: +80 за 1.5 года | Публикации в Q1: 100%</p>
+
+            <h3>👥 Научная сеть и школа</h3>
+            <p id="network">Соавторы: профессор Stanford AI Lab, исследователь Google DeepMind, постдок из ETH Zurich — сильная международная научная среда. Принадлежность к школе профессора Andrew Ng подтверждена.</p>
+        </div>
+    </div>
+
+    <!-- Self-Diagnosis Result -->
+    <div class="result" id="self-result" style="display: none;">
+        <div class="score-container">
+            <div class="score">78</div>
+            <div class="score-sub">из 100</div>
+            <div class="tag" style="background: var(--warning);">Хороший потенциал — есть зоны роста</div>
+        </div>
+
+        <div class="self-diagnosis">
+            <strong>🔍 Самодиагностика: Чего вам не хватает до "звездного" уровня?</strong>
+            <div class="gap-list">
+                <div class="gap-item">Нет публикаций в журналах Q1 — это снижает ваш рейтинг на 15 пунктов. Цель: опубликоваться в Nature Communications, CVPR или аналогах.</div>
+                <div class="gap-item">Английский в статьях содержит грамматические ошибки — снижает международную воспринимаемость. Рекомендуем редактуру носителем.</div>
+                <div class="gap-item">В 2 из 4 статей вы не первый автор — это снижает оценку вклада. Старайтесь быть лид-автором в ключевых работах.</div>
+                <div class="gap-item">Мало формул и теоретической глубины — добавьте хотя бы 5–7 формул в следующую статью для повышения академического веса.</div>
+            </div>
+        </div>
+
+        <div class="recommendation">
+            <div>
+                <strong>🚀 План развития на 6 месяцев:</strong><br>
+                1. Подать статью в журнал Q1 до сентября<br>
+                2. Пройти курс академического английского (Coursera: “Writing in the Sciences”)<br>
+                3. Принять участие в международной конференции как спикер<br>
+                4. Найти ментора из топ-100 университета через ResearchGate
+            </div>
+        </div>
+
+        <div class="btn-group">
+            <button class="btn-wide" onclick="downloadPDF()">📥 Скачать план развития (PDF)</button>
+            <button class="btn-wide secondary" onclick="setReminder()">📅 Установить напоминание</button>
+        </div>
+    </div>
+
+    <!-- Bulk Results -->
+    <div class="bulk-results" id="bulk-results">
+        <h2 style="text-align: center; color: var(--dark); margin: 30px 0 20px;">Результаты анализа списка</h2>
+        <div class="bulk-list" id="bulk-list">
+            <!-- Dynamically filled -->
+        </div>
+        <div style="text-align: center; margin-top: 30px;">
+            <button class="secondary" onclick="exportBulkResults()">📤 Экспортировать топ-5 в PDF</button>
+        </div>
+    </div>
+
+    <div class="footer">
+        TalentRadar Demo — оффлайн версия для презентаций. Все данные сгенерированы для демонстрации.
+    </div>
+</div>
+
+<script>
+    // Mock data
+    const mockData = {
+        "Petrova": {
+            name: "Анастасия Петрова",
+            avatar: "👩‍🔬",
+            meta1: "📍 Computer Science, MIT | 📚 3 публикации | h-index: 4 | 📈 Цитирования: 80",
+            meta2: "✅ На arXiv: да | 🌍 Образование: MIT | 🎓 Научная школа: Stanford AI Lab",
+            score: 92,
+            tag: "Высокий потенциал — приоритетный кандидат",
+            bars: { pub: 95, collab: 90, global: 85, depth: 98 },
+            pubDetails: [
+                "<strong>NeurIPS 2023</strong> — Q1, первая авторка, 45 цитирований, 12 формул, 110 ссылок, грамматика: экспертный уровень",
+                "<strong>CVPR 2024</strong> — Q1, первая авторка, 30 цитирований, 8 экспериментов, индекс новизны: высокий",
+                "<strong>arXiv:2403.12345</strong> — препринт, 5 формул, 130 ссылок, рецензенты: профессора MIT и Oxford"
+            ],
+            growth: "h-index: 1 → 4 за 18 месяцев | Цитирования: +80 за 1.5 года | Публикации в Q1: 100%",
+            network: "Соавторы: профессор Stanford AI Lab, исследователь Google DeepMind, постдок из ETH Zurich — сильная международная научная среда. Принадлежность к школе профессора Andrew Ng подтверждена."
+        },
+        "Ivanov": {
+            name: "Дмитрий Иванов",
+            avatar: "👨‍🔬",
+            meta1: "📍 Physics, МГУ | 📚 5 публикаций | h-index: 3 | 📈 Цитирования: 45",
+            meta2: "✅ На arXiv: да | 🌍 Образование: МГУ | 🎓 Научная школа: Ландау",
+            score: 76,
+            tag: "Средний потенциал — требуется развитие",
+            bars: { pub: 80, collab: 70, global: 65, depth: 85 },
+            pubDetails: [
+                "<strong>Physical Review B</strong> — Q2, второй автор, 25 цитирований, 20 формул",
+                "<strong>arXiv:2401.56789</strong> — препринт, первый автор, 8 экспериментов",
+                "<strong>Journal of Physics</strong> — Q3, первый автор, 15 цитирований"
+            ],
+            growth: "h-index: 1 → 3 за 2 года | Цитирования: +45 за 2 года",
+            network: "Соавторы: профессора МГУ и ФИАН. Международных коллабораций пока нет."
+        },
+        "Smith": {
+            name: "Emily Smith",
+            avatar: "👩‍🔬",
+            meta1: "📍 Biology, Oxford | 📚 2 публикации | h-index: 2 | 📈 Цитирования: 60",
+            meta2: "✅ На bioRxiv: да | 🌍 Образование: Oxford | 🎓 Научная школа: CRISPR pioneers",
+            score: 88,
+            tag: "Высокий потенциал — быстрый рост",
+            bars: { pub: 90, collab: 85, global: 95, depth: 80 },
+            pubDetails: [
+                "<strong>Nature Biotechnology</strong> — Q1, со-первый автор, 50 цитирований",
+                "<strong>bioRxiv:2024.02.12345</strong> — препринт, первый автор, 15 экспериментов"
+            ],
+            growth: "h-index: 0 → 2 за 1 год | Цитирования: +60 за 1 год — впечатляющий старт!",
+            network: "Соавторы: лаборатория Дженнифер Дудны (лауреат Нобелевской премии)."
+        }
+    };
+
+    function switchTab(tab) {
+        // Hide all sections
+        document.getElementById('single-mode').style.display = 'none';
+        document.getElementById('bulk-mode').style.display = 'none';
+        document.getElementById('self-mode').style.display = 'none';
+        document.getElementById('single-result').style.display = 'none';
+        document.getElementById('self-result').style.display = 'none';
+        document.getElementById('bulk-results').style.display = 'none';
+
+        // Reset tabs
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+
+        // Show selected
+        if (tab === 'single') {
+            document.getElementById('single-mode').style.display = 'block';
+            document.querySelector('.tab:nth-child(1)').classList.add('active');
+        } else if (tab === 'bulk') {
+            document.getElementById('bulk-mode').style.display = 'block';
+            document.querySelector('.tab:nth-child(2)').classList.add('active');
+        } else if (tab === 'self') {
+            document.getElementById('self-mode').style.display = 'block';
+            document.querySelector('.tab:nth-child(3)').classList.add('active');
+        }
+    }
+
+    function animateBars() {
+        document.querySelectorAll('.bar-fill').forEach(bar => {
+            const targetWidth = bar.getAttribute('data-width');
+            bar.style.width = targetWidth;
+        });
+    }
+
+    function analyzeSingle() {
+        const name = document.getElementById('scientistName').value.trim();
+        if (!name) {
+            alert('⚠️ Введите фамилию ученого');
+            return;
+        }
+
+        showLoading();
+        setTimeout(() => {
+            hideLoading();
+            showSingleResult(name);
+        }, 3000);
+    }
+
+    function showSingleResult(name) {
+        const data = mockData[name.charAt(0).toUpperCase() + name.slice(1)] || mockData["Petrova"];
+
+        document.getElementById('result-name').innerHTML = `${data.avatar} ${data.name}`;
+        document.getElementById('result-meta1').textContent = data.meta1;
+        document.getElementById('result-meta2').textContent = data.meta2;
+        document.getElementById('result-score').textContent = data.score;
+        document.getElementById('result-tag').textContent = data.tag;
+
+        document.getElementById('pub-percent').textContent = data.bars.pub + "%";
+        document.getElementById('collab-percent').textContent = data.bars.collab + "%";
+        document.getElementById('global-percent').textContent = data.bars.global + "%";
+        document.getElementById('depth-percent').textContent = data.bars.depth + "%";
+
+        document.getElementById('pub-bar').setAttribute('data-width', data.bars.pub + "%");
+        document.getElementById('collab-bar').setAttribute('data-width', data.bars.collab + "%");
+        document.getElementById('global-bar').setAttribute('data-width', data.bars.global + "%");
+        document.getElementById('depth-bar').setAttribute('data-width', data.bars.depth + "%");
+
+        const pubList = document.getElementById('pub-details');
+        pubList.innerHTML = '';
+        data.pubDetails.forEach(item => {
+            const li = document.createElement('li');
+            li.innerHTML = item;
+            pubList.appendChild(li);
+        });
+
+        document.getElementById('growth').textContent = data.growth;
+        document.getElementById('network').textContent = data.network;
+
+        document.getElementById('single-result').style.display = 'block';
+        setTimeout(animateBars, 100);
+    }
+
+    function analyzeBulk() {
+        const text = document.getElementById('scientistList').value.trim();
+        if (!text) {
+            alert('⚠️ Введите хотя бы одну фамилию');
+            return;
+        }
+
+        const names = text.split('\n').filter(n => n.trim()).map(n => n.trim());
+        if (names.length === 0) {
+            alert('⚠️ Введите хотя бы одну фамилию');
+            return;
+        }
+
+        showLoading();
+        setTimeout(() => {
+            hideLoading();
+            showBulkResults(names);
+        }, 3000);
+    }
+
+    function showBulkResults(names) {
+        const bulkList = document.getElementById('bulk-list');
+        bulkList.innerHTML = '';
+
+        // Generate mock results
+        const results = [];
+        for (let name of names) {
+            let key = name.charAt(0).toUpperCase() + name.slice(1);
+            if (!mockData[key]) key = Object.keys(mockData)[Math.floor(Math.random() * 3)];
+            results.push({ name: name, ...mockData[key] });
+        }
+
+        // Sort by score
+        results.sort((a, b) => b.score - a.score);
+
+        // Add to DOM
+        results.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'bulk-item';
+            div.innerHTML = `
+          <div>
+            <div class="bulk-name">${item.avatar} ${item.name}</div>
+            <div style="color: #64748b; font-size: 14px;">${item.meta1.split('|')[0]}</div>
+          </div>
+          <div style="text-align: right;">
+            <div class="bulk-score">${item.score}</div>
+            <div class="bulk-tag">${item.tag.split('—')[0]}</div>
+          </div>
+        `;
+            div.onclick = () => {
+                // Simulate loading then show single result
+                showLoading();
+                setTimeout(() => {
+                    hideLoading();
+                    showSingleResult(item.name);
+                    switchTab('single');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }, 1500);
+            };
+            bulkList.appendChild(div);
+        });
+
+        document.getElementById('bulk-results').style.display = 'block';
+        document.getElementById('single-result').style.display = 'none';
+    }
+
+    function runSelfDiagnosis() {
+        showLoading();
+        setTimeout(() => {
+            hideLoading();
+            document.getElementById('self-result').style.display = 'block';
+            document.getElementById('single-result').style.display = 'none';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }, 3000);
+    }
+
+    function showLoading() {
+        document.getElementById('loading').style.display = 'block';
+    }
+
+    function hideLoading() {
+        document.getElementById('loading').style.display = 'none';
+    }
+
+    function downloadPDF() {
+        alert('📄 Для демо: PDF-отчет сформирован! В реальной версии он будет скачиваться автоматически.');
+    }
+
+    function addToWatchlist() {
+        alert('⭐ Ученый добавлен в ваш список наблюдения!');
+    }
+
+    function setReminder() {
+        alert('📅 Напоминание установлено: проверить прогресс через 3 месяца.');
+    }
+
+    function exportBulkResults() {
+        alert('📤 Топ-5 кандидатов экспортированы в PDF для вашего комитета.');
+    }
+
+    // Auto-start demo
+    window.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => {
+            analyzeSingle();
+        }, 1000);
+    });
+</script>
+</body>
+</html>
